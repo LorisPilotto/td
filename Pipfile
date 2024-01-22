@@ -9,6 +9,7 @@ pandas = "*"
 yfinance = "*"
 plotly = "*"
 scikit-learn = "*"
+pandas-ta = "*"
 
 [dev-packages]
 ipykernel = "*"

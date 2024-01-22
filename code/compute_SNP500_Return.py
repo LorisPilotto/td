@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 
-from download_SNP500_OHLCV import get_SNP500_stock_OHLCV, get_SNP500_list
+from download_SNP500_OHLCV import get_SNP500_stock_daily_OHLCV, get_SNP500_stock_minuts_OHLCV, get_SNP500_list
 from utilities import delete_files_in_folder
 
 
@@ -54,48 +54,52 @@ def plot_returns(stock_daily_returns, symbol):
     fig.show()
 
 
-def save_SNP500_stock_Return(ret_df, symbol):
-    """
-    Save returns for a specific stock symbol to a CSV file.
+def save_SNP500_stock_daily_Return(ret_df, symbol):
+    
+    ret_df.to_csv("C:/Users/loris/Desktop/td/data/SNP500_daily_Return/"+symbol+".csv")
 
-    Parameters:
-    ret_df (pandas.DataFrame): DataFrame containing calculated returns for a stock symbol.
-    symbol (str): Stock symbol used as part of the CSV filename.
-    """
-    ret_df.to_csv("C:/Users/loris/Desktop/td/data/SNP500_Return/"+symbol+".csv")
+def get_SNP500_stock_daily_Return(symbol):
+    
+    return pd.read_csv("C:/Users/loris/Desktop/td/data/SNP500_daily_Return/"+symbol+".csv", index_col='Date', parse_dates=['Date'])
 
+def save_SNP500_stock_minuts_Return(ret_df, symbol):
+    
+    ret_df.to_csv("C:/Users/loris/Desktop/td/data/SNP500_minuts_Return/"+symbol+".csv")
 
-def get_SNP500_stock_Return(symbol):
-    """
-    Load returns for a specific stock symbol from a CSV file.
-
-    Parameters:
-    symbol (str): Stock symbol used to identify the CSV file.
-
-    Returns:
-    pandas.DataFrame: DataFrame containing returns for the specified stock symbol.
-    """
-    return pd.read_csv("C:/Users/loris/Desktop/td/data/SNP500_Return/"+symbol+".csv", index_col='Date', parse_dates=['Date'])
+def get_SNP500_stock_minuts_Return(symbol):
+    
+    return pd.read_csv("C:/Users/loris/Desktop/td/data/SNP500_minuts_Return/"+symbol+".csv", index_col='Datetime', parse_dates=['Datetime'])
 
 
 def save_all_SNP500_returns():
     """
     Computation and saving of returns for all stocks listed in the S&P 500 index.
     """
-    delete_files_in_folder("C:/Users/loris/Desktop/td/data/SNP500_Return/")
+    delete_files_in_folder("C:/Users/loris/Desktop/td/data/SNP500_daily_Return/")
+    delete_files_in_folder("C:/Users/loris/Desktop/td/data/SNP500_minuts_Return/")
 
-    all_stocks = pd.DataFrame()
+    all_daily_stocks = pd.DataFrame()
+    all_minuts_stocks = pd.DataFrame()
 
     for symbol in get_SNP500_list().index:
 
-        close_values = get_SNP500_stock_OHLCV(symbol)['Close']
-        return_df = compute_return(close_values)
+        daily_close_values = get_SNP500_stock_daily_OHLCV(symbol)['Close']
+        minuts_close_values = get_SNP500_stock_minuts_OHLCV(symbol)['Close']
+
+        return_daily = compute_return(daily_close_values)
+        return_minuts = compute_return(minuts_close_values)
+
+        
+        save_SNP500_stock_daily_Return(return_daily, symbol)
+        save_SNP500_stock_minuts_Return(return_minuts, symbol)
+
         print(symbol+" return computed")
-        save_SNP500_stock_Return(return_df, symbol)
 
-        all_stocks = all_stocks.merge(return_df.add_prefix(symbol+" "), 'outer', left_index=True, right_index=True)
+        all_daily_stocks = all_daily_stocks.merge(return_daily.add_prefix(symbol+" "), 'outer', left_index=True, right_index=True)
+        all_minuts_stocks = all_minuts_stocks.merge(return_minuts.add_prefix(symbol+" "), 'outer', left_index=True, right_index=True)
 
-    save_SNP500_stock_Return(all_stocks, "all_stocks")
+    save_SNP500_stock_daily_Return(all_daily_stocks, "all_stocks")
+    save_SNP500_stock_minuts_Return(all_minuts_stocks, "all_stocks")
     print("All returns computed")
 
 
